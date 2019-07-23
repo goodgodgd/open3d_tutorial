@@ -20,6 +20,8 @@ private slots:
 
     void on_pushButton_rsw_depth_clicked();
 
+    void on_pushButton_rsw_points_clicked();
+
 private:
     Ui::MainWindow *ui;
 };
