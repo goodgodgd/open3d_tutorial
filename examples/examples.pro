@@ -23,12 +23,22 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 
+INCLUDEPATH += /home/ian/mylib/deploy/open3d/include \
+                /home/ian/mylib/deploy/open3d/include/Open3D/3rdparty/fmt/include \
+                /home/ian/mylib/deploy/open3d/include/Open3D/3rdparty/Eigen
+
+LIBS += -L/home/ian/mylib/deploy/open3d/lib \
+        -lOpen3D
+
+
 SOURCES += \
         main.cpp \
-        mainwindow.cpp
+        mainwindow.cpp \
+    open3dexamples.cpp
 
 HEADERS += \
-        mainwindow.h
+        mainwindow.h \
+    open3dexamples.h
 
 FORMS += \
         mainwindow.ui
