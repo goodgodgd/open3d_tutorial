@@ -7,6 +7,7 @@ class Open3dExamples
 public:
     Open3dExamples();
     static void ReadShowWrite_RGB(const char* srcname, const char* dstname);
+    static void ReadShowWrite_Depth(const char* srcname, const char* dstname);
 };
 
 #endif // OPEN3DEXAMPLES_H
