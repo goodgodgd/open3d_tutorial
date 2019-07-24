@@ -3,6 +3,23 @@
 #include <iostream>
 #include <Open3D/Registration/ColoredICP.h>
 
+struct RegPar   // registration params
+{
+    static double depth_scale;
+    static double depth_trunc;
+    static double max_correspondence_dist;
+    static Eigen::Matrix4d init_pose;
+    static open3d::geometry::KDTreeSearchParamHybrid kdtree;
+    static open3d::camera::PinholeCameraIntrinsic intrinsic;
+};
+double RegPar::depth_scale = 5000.0;
+double RegPar::depth_trunc = 4.0;
+double RegPar::max_correspondence_dist = 0.1;
+Eigen::Matrix4d RegPar::init_pose = Eigen::Matrix4d::Identity();
+open3d::geometry::KDTreeSearchParamHybrid RegPar::kdtree(0.01, 20);
+open3d::camera::PinholeCameraIntrinsic RegPar::intrinsic(
+        open3d::camera::PinholeCameraIntrinsicParameters::PrimeSenseDefault);
+
 
 RegistrationExamples::RegistrationExamples()
 {
@@ -20,20 +37,14 @@ void RegistrationExamples::IcpPointCloud(const char* srcdepthfile, const char* t
     }
 
     // convert depth to point cloud
-    open3d::camera::PinholeCameraIntrinsic intrinsic(
-                open3d::camera::PinholeCameraIntrinsicParameters::PrimeSenseDefault);
-    Eigen::Matrix4d extrinsic = Eigen::Matrix4d::Identity();
-    const double depth_scale = 5000.0; // from TUM RGBD dataset info
-    const double depth_trunc = 3.0;
     o3PointCloudPtr src_cloud = o3PointCloud::CreateFromDepthImage(
-                *src_depth, intrinsic, extrinsic, depth_scale, depth_trunc);
+                *src_depth, RegPar::intrinsic, RegPar::init_pose, RegPar::depth_scale, RegPar::depth_trunc);
     o3PointCloudPtr tgt_cloud = o3PointCloud::CreateFromDepthImage(
-                *tgt_depth, intrinsic, extrinsic, depth_scale, depth_trunc);
+                *tgt_depth, RegPar::intrinsic, RegPar::init_pose, RegPar::depth_scale, RegPar::depth_trunc);
 
     // estimate normal
-    open3d::geometry::KDTreeSearchParamHybrid kdtree(0.01, 20);
-    src_cloud->EstimateNormals(kdtree, true);
-    tgt_cloud->EstimateNormals(kdtree, true);
+    src_cloud->EstimateNormals(RegPar::kdtree, true);
+    tgt_cloud->EstimateNormals(RegPar::kdtree, true);
 
     // check point and normal
     uint32_t index = 240*src_depth->height_ + 400;
@@ -46,13 +57,12 @@ void RegistrationExamples::IcpPointCloud(const char* srcdepthfile, const char* t
     ShowTwoPointClouds(src_cloud, tgt_cloud, Eigen::Matrix4d_u::Identity(), "point to plane ICP");
 
     // point-to-plane ICP
-    const double max_correspondence_distance = 0.1;
-    const Eigen::Matrix4d_u init_transform = Eigen::Matrix4d_u::Identity();
     open3d::registration::TransformationEstimationPointToPlane point_to_plane;
     open3d::registration::ICPConvergenceCriteria convergence(1e-6, 1e-6, 20);
     open3d::registration::RegistrationResult result =
             open3d::registration::RegistrationICP(*src_cloud, *tgt_cloud,
-                                                  max_correspondence_distance, init_transform,
+                                                  RegPar::max_correspondence_dist,
+                                                  RegPar::init_pose,
                                                   point_to_plane, convergence);
 
     open3d::utility::LogInfo("point-to-plane ICP transformation result: \n  fitness={}, transformation=\n{}\n",
@@ -73,22 +83,18 @@ void RegistrationExamples::RgbDepthToPCD(const char* colorfile, const char* dept
     }
 
     // convert to rgbd image
-    double depth_scale = 5000.0, depth_trunc = 3.0;
     bool convert_rgb_to_intensity = false;
     std::shared_ptr<open3d::geometry::RGBDImage> rgbd_ptr =
             open3d::geometry::RGBDImage::CreateFromColorAndDepth(
-                *color_ptr, *depth_ptr, depth_scale, depth_trunc, convert_rgb_to_intensity);
+                *color_ptr, *depth_ptr, RegPar::depth_scale, RegPar::depth_trunc, convert_rgb_to_intensity);
 
     // conver rgbd image to point cloud
-    open3d::camera::PinholeCameraIntrinsic intrinsic(
-                open3d::camera::PinholeCameraIntrinsicParameters::PrimeSenseDefault);
-    o3PointCloudPtr pcd_ptr = o3PointCloud::CreateFromRGBDImage(*rgbd_ptr, intrinsic);
+    o3PointCloudPtr pcd_ptr = o3PointCloud::CreateFromRGBDImage(*rgbd_ptr, RegPar::intrinsic);
     open3d::utility::LogInfo("point cloud size: point={} | color={} | normal={}\n",
                              pcd_ptr->points_.size(), pcd_ptr->colors_.size(), pcd_ptr->normals_.size());
 
     // estimate normal
-    open3d::geometry::KDTreeSearchParamHybrid kdtree(0.01, 20);
-    pcd_ptr->EstimateNormals(kdtree, false);
+    pcd_ptr->EstimateNormals(RegPar::kdtree, false);
     open3d::utility::LogInfo("point cloud size: point={} | color={} | normal={}\n",
                              pcd_ptr->points_.size(), pcd_ptr->colors_.size(), pcd_ptr->normals_.size());
 
@@ -122,12 +128,10 @@ void RegistrationExamples::IcpColoredPointCloud(const char* srcpcdfile, const ch
     ShowTwoPointClouds(src_cloud, tgt_cloud, Eigen::Matrix4d_u::Identity(), "colored ICP");
 
     // colored ICP
-    const double max_correspondence_distance = 0.1;
-    const Eigen::Matrix4d_u init_transform = Eigen::Matrix4d_u::Identity();
     open3d::registration::ICPConvergenceCriteria convergence(1e-6, 1e-6, 20);
     open3d::registration::RegistrationResult result =
             open3d::registration::RegistrationColoredICP(*src_cloud, *tgt_cloud,
-                                                  max_correspondence_distance, init_transform,
+                                                  RegPar::max_correspondence_dist, RegPar::init_pose,
                                                   convergence);
 
     open3d::utility::LogInfo("colored ICP transformation result: \n  fitness={}, transformation=\n{}\n",
@@ -151,26 +155,23 @@ void RegistrationExamples::VisualOdometryRgbDepth(const char* srccolorfile, cons
     }
 
     // convert to rgbd image
-    double depth_scale = 5000.0, depth_trunc = 3.0;
     // Note! rgb image MUST be converted to intensity for odometry use
     bool convert_rgb_to_intensity = true;
     std::shared_ptr<open3d::geometry::RGBDImage> src_rgbd =
             open3d::geometry::RGBDImage::CreateFromColorAndDepth(
-                *src_color, *src_depth, depth_scale, depth_trunc, convert_rgb_to_intensity);
+                *src_color, *src_depth, RegPar::depth_scale, RegPar::depth_trunc, convert_rgb_to_intensity);
     std::shared_ptr<open3d::geometry::RGBDImage> tgt_rgbd =
             open3d::geometry::RGBDImage::CreateFromColorAndDepth(
-                *tgt_color, *tgt_depth, depth_scale, depth_trunc, convert_rgb_to_intensity);
+                *tgt_color, *tgt_depth, RegPar::depth_scale, RegPar::depth_trunc, convert_rgb_to_intensity);
 
     // visual odometry parameters
-    open3d::camera::PinholeCameraIntrinsic intrinsic(
-                open3d::camera::PinholeCameraIntrinsicParameters::PrimeSenseDefault);
-    const Eigen::Matrix4d_u init_odom = Eigen::Matrix4d_u::Identity();
-    open3d::odometry::OdometryOption option({20,10,5}, 0.1, 0, 3.0);
+    open3d::odometry::OdometryOption option({20,10,5}, RegPar::max_correspondence_dist,
+                                            0, RegPar::depth_trunc);
     open3d::odometry::RGBDOdometryJacobianFromHybridTerm jacobian;
 
     // visual odometry
-    auto result = open3d::odometry::ComputeRGBDOdometry(*src_rgbd, *tgt_rgbd, intrinsic,
-                                                        init_odom, jacobian, option);
+    auto result = open3d::odometry::ComputeRGBDOdometry(*src_rgbd, *tgt_rgbd, RegPar::intrinsic,
+                                                        RegPar::init_pose, jacobian, option);
     bool success = std::get<0>(result);
     Eigen::Matrix4d motion = std::get<1>(result);
     Eigen::Matrix6d inform = std::get<2>(result);
@@ -178,8 +179,8 @@ void RegistrationExamples::VisualOdometryRgbDepth(const char* srccolorfile, cons
                              success, motion, inform);
 
     // visualize result
-    o3PointCloudPtr src_cloud = o3PointCloud::CreateFromRGBDImage(*src_rgbd, intrinsic);
-    o3PointCloudPtr tgt_cloud = o3PointCloud::CreateFromRGBDImage(*tgt_rgbd, intrinsic);
+    o3PointCloudPtr src_cloud = o3PointCloud::CreateFromRGBDImage(*src_rgbd, RegPar::intrinsic);
+    o3PointCloudPtr tgt_cloud = o3PointCloud::CreateFromRGBDImage(*tgt_rgbd, RegPar::intrinsic);
     ShowTwoPointClouds(src_cloud, tgt_cloud, motion, "RGBD Odometry");
 }
 
