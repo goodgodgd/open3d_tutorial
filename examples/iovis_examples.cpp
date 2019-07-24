@@ -1,14 +1,14 @@
-#include "open3dexamples.h"
+#include "iovis_examples.h"
 
-Open3dExamples::Open3dExamples()
+IoVis_Examples::IoVis_Examples()
 {
 
 }
 
-void Open3dExamples::ReadShowWrite_RGB(const char* srcname, const char* dstname, bool write_filtered)
+void IoVis_Examples::ReadShowWrite_RGB(const char* srcname, const char* dstname, bool write_filtered)
 {
     // read
-    auto image_ptr = std::make_shared<open3d::geometry::Image>();
+    auto image_ptr = std::make_shared<o3Image>();
     if(!open3d::io::ReadImage(srcname, *image_ptr))
     {
         open3d::utility::LogError("Failed to read {}\n\n", srcname);
@@ -22,7 +22,7 @@ void Open3dExamples::ReadShowWrite_RGB(const char* srcname, const char* dstname,
 
     // filtering
     auto image_gray_ptr = image_ptr->CreateFloatImage();
-    auto blur_gray = image_gray_ptr->Filter(open3d::geometry::Image::FilterType::Gaussian3);
+    auto blur_gray = image_gray_ptr->Filter(o3Image::FilterType::Gaussian3);
     LogImageDimension(blur_gray, "filtered gray");
 
     // write
@@ -35,11 +35,10 @@ void Open3dExamples::ReadShowWrite_RGB(const char* srcname, const char* dstname,
         open3d::io::WriteImage(dstname, *image_ptr);
 }
 
-void Open3dExamples::ReadShowWrite_Depth(const char* srcname, const char* dstname, bool write_scaled)
+void IoVis_Examples::ReadShowWrite_Depth(const char* srcname, const char* dstname, bool write_scaled)
 {
     // read
-    std::shared_ptr<open3d::geometry::Image> depth_ptr =
-            open3d::io::CreateImageFromFile(srcname);
+    o3ImagePtr depth_ptr = open3d::io::CreateImageFromFile(srcname);
     if(depth_ptr->IsEmpty())
     {
         open3d::utility::LogError("Failed to read {}\n\n", srcname);
@@ -61,8 +60,8 @@ void Open3dExamples::ReadShowWrite_Depth(const char* srcname, const char* dstnam
     // convert depth to point cloud
     open3d::camera::PinholeCameraIntrinsic camera;
     camera.SetIntrinsics(640, 480, 575.0, 575.0, 319.5, 239.5);
-    std::shared_ptr<open3d::geometry::PointCloud> pointcloud_ptr =
-            open3d::geometry::PointCloud::CreateFromDepthImage(*depth_ptr, camera);
+    o3PointCloudPtr pointcloud_ptr =
+            o3PointCloud::CreateFromDepthImage(*depth_ptr, camera);
 
     // show point cloud
     open3d::visualization::DrawGeometries({pointcloud_ptr},
@@ -80,7 +79,7 @@ void Open3dExamples::ReadShowWrite_Depth(const char* srcname, const char* dstnam
         open3d::io::WriteImage(dstname, *depth_ptr);
 
     // check the saved image has the same depth
-    std::shared_ptr<open3d::geometry::Image> result_ptr =
+    o3ImagePtr result_ptr =
             open3d::io::CreateImageFromFile(dstname);
     bool same = true;
     for(int v=0; v<depth_ptr->height_; v++)
@@ -101,15 +100,13 @@ void Open3dExamples::ReadShowWrite_Depth(const char* srcname, const char* dstnam
         open3d::utility::LogInfo("the saved image has the same depth\n");
 }
 
-void Open3dExamples::ReadShowWrite_PointCloud(const char* colorname, const char* depthname,
+void IoVis_Examples::ReadShowWrite_PointCloud(const char* colorname, const char* depthname,
                                               const char* pcdname)
 {
     // read color and depth
-    std::shared_ptr<open3d::geometry::Image> color_ptr =
-            open3d::io::CreateImageFromFile(colorname);
+    o3ImagePtr color_ptr = open3d::io::CreateImageFromFile(colorname);
     LogImageDimension(color_ptr, "color image");
-    std::shared_ptr<open3d::geometry::Image> depth_ptr =
-            open3d::io::CreateImageFromFile(depthname);
+    o3ImagePtr depth_ptr = open3d::io::CreateImageFromFile(depthname);
     LogImageDimension(depth_ptr, "depth image");
     if(color_ptr->IsEmpty() || depth_ptr->IsEmpty())
     {
@@ -125,11 +122,10 @@ void Open3dExamples::ReadShowWrite_PointCloud(const char* colorname, const char*
                 *color_ptr, *depth_ptr, depth_scale, depth_trunc, convert_rgb_to_intensity);
 
     // conver rgbd image to point cloud
-    open3d::camera::PinholeCameraIntrinsic intrinsic =
-            open3d::camera::PinholeCameraIntrinsic(
+    open3d::camera::PinholeCameraIntrinsic intrinsic(
                 open3d::camera::PinholeCameraIntrinsicParameters::PrimeSenseDefault);
-    std::shared_ptr<open3d::geometry::PointCloud> pcd_ptr =
-            open3d::geometry::PointCloud::CreateFromRGBDImage(*rgbd_ptr, intrinsic);
+    o3PointCloudPtr pcd_ptr =
+            o3PointCloud::CreateFromRGBDImage(*rgbd_ptr, intrinsic);
 
     // access to point and color
     // point cloud is listed in column-first order
@@ -145,7 +141,7 @@ void Open3dExamples::ReadShowWrite_PointCloud(const char* colorname, const char*
     open3d::io::WritePointCloud(pcdname, *pcd_ptr, write_ascii, compressed);
 
     // read point cloud again
-    std::shared_ptr<open3d::geometry::PointCloud> neo_pcd_ptr;
+    o3PointCloudPtr neo_pcd_ptr;
     neo_pcd_ptr = open3d::io::CreatePointCloudFromFile(pcdname, "pcd", true);
     open3d::utility::LogInfo("loaded point cloud values: point={} | color={}\n",
                              neo_pcd_ptr->points_[index].transpose(), neo_pcd_ptr->colors_[index].transpose());
@@ -154,7 +150,7 @@ void Open3dExamples::ReadShowWrite_PointCloud(const char* colorname, const char*
     open3d::visualization::DrawGeometries({neo_pcd_ptr}, "loaded point cloud");
 }
 
-void Open3dExamples::LogImageDimension(std::shared_ptr<open3d::geometry::Image> img_ptr,
+void IoVis_Examples::LogImageDimension(o3ImagePtr img_ptr,
                                        std::string name)
 {
     open3d::utility::LogInfo("{} size: {:d} x {:d} x {:d} ({:d} bytes per channel)\n",

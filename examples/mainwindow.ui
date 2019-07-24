@@ -6,64 +6,129 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>527</width>
-    <height>432</height>
+    <width>382</width>
+    <height>367</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <widget class="QPushButton" name="pushButton_rsw_rgb">
+   <widget class="QGroupBox" name="groupBox">
     <property name="geometry">
      <rect>
       <x>20</x>
-      <y>50</y>
-      <width>121</width>
-      <height>25</height>
+      <y>10</y>
+      <width>151</width>
+      <height>131</height>
      </rect>
     </property>
-    <property name="text">
-     <string>RSW RGB</string>
+    <property name="title">
+     <string>Read, Show and Write</string>
     </property>
+    <widget class="QPushButton" name="pushButton_rsw_points">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>90</y>
+       <width>131</width>
+       <height>25</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>RSW Point Cloud</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="pushButton_rsw_rgb">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>30</y>
+       <width>131</width>
+       <height>25</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>RSW RGB</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="pushButton_rsw_depth">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>60</y>
+       <width>131</width>
+       <height>25</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>RSW Depth</string>
+     </property>
+    </widget>
    </widget>
-   <widget class="QPushButton" name="pushButton_rsw_depth">
+   <widget class="QGroupBox" name="groupBox_2">
     <property name="geometry">
      <rect>
       <x>20</x>
-      <y>80</y>
-      <width>121</width>
-      <height>25</height>
+      <y>160</y>
+      <width>151</width>
+      <height>131</height>
      </rect>
     </property>
-    <property name="text">
-     <string>RSW Depth</string>
+    <property name="title">
+     <string>Registration</string>
     </property>
+    <widget class="QPushButton" name="pushButton_icp_point_plane">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>30</y>
+       <width>131</width>
+       <height>25</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>ICP point-to-plane</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="pushButton_icp_colored">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>60</y>
+       <width>131</width>
+       <height>25</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>ICP with color</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="pushButton_vo_colored">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>90</y>
+       <width>131</width>
+       <height>25</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>VO with color</string>
+     </property>
+    </widget>
    </widget>
-   <widget class="QLabel" name="label">
+   <widget class="QGroupBox" name="groupBox_3">
     <property name="geometry">
      <rect>
-      <x>20</x>
-      <y>20</y>
-      <width>201</width>
-      <height>21</height>
+      <x>200</x>
+      <y>10</y>
+      <width>151</width>
+      <height>131</height>
      </rect>
     </property>
-    <property name="text">
-     <string>RSW: Read, Show, and Write</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="pushButton_rsw_points">
-    <property name="geometry">
-     <rect>
-      <x>20</x>
-      <y>110</y>
-      <width>121</width>
-      <height>25</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>RSW Point Cloud</string>
+    <property name="title">
+     <string>TSDF</string>
     </property>
    </widget>
   </widget>
@@ -72,7 +137,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>527</width>
+     <width>382</width>
      <height>22</height>
     </rect>
    </property>

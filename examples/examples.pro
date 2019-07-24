@@ -34,11 +34,14 @@ LIBS += -L/home/ian/mylib/deploy/open3d/lib \
 SOURCES += \
         main.cpp \
         mainwindow.cpp \
-    open3dexamples.cpp
+    iovis_examples.cpp \
+    registration_examples.cpp
 
 HEADERS += \
         mainwindow.h \
-    open3dexamples.h
+    iovis_examples.h \
+    registration_examples.h \
+    definitions.h
 
 FORMS += \
         mainwindow.ui

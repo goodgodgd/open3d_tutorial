@@ -1,22 +1,20 @@
 #ifndef OPEN3DEXAMPLES_H
 #define OPEN3DEXAMPLES_H
 
-#include <memory>
-
-#include "Open3D/Open3D.h"
+#include "definitions.h"
 
 
-class Open3dExamples
+class IoVis_Examples
 {
 public:
-    Open3dExamples();
+    IoVis_Examples();
     static void ReadShowWrite_RGB(const char* srcname, const char* dstname,
                                   bool write_filtered=false);
     static void ReadShowWrite_Depth(const char* srcname, const char* dstname,
                                     bool write_scaled=false);
     static void ReadShowWrite_PointCloud(const char* colorname, const char *depthname,
                                          const char* pcdname);
-    static void LogImageDimension(std::shared_ptr<open3d::geometry::Image> img_ptr,
+    static void LogImageDimension(o3ImagePtr img_ptr,
                                   std::string name);
 };
 

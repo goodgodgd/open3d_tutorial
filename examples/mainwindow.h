@@ -22,6 +22,12 @@ private slots:
 
     void on_pushButton_rsw_points_clicked();
 
+    void on_pushButton_icp_point_plane_clicked();
+
+    void on_pushButton_icp_colored_clicked();
+
+    void on_pushButton_vo_colored_clicked();
+
 private:
     Ui::MainWindow *ui;
 };
