@@ -41,63 +41,42 @@ void IoVis_Examples::ReadShowWrite_Depth(const char* srcname, const char* dstnam
     o3ImagePtr depth_ptr = open3d::io::CreateImageFromFile(srcname);
     if(depth_ptr->IsEmpty())
     {
-        open3d::utility::LogError("Failed to read {}\n\n", srcname);
+        open3d::utility::LogError("Failed to read {}\n", srcname);
         return;
     }
     LogImageDimension(depth_ptr, "depth image");
 
     // convert depth scale
-    auto depth_gray_ptr = depth_ptr->ConvertDepthToFloatImage(10000.0);
-    LogImageDimension(depth_gray_ptr, "depth float image");
+    auto depth_float = depth_ptr->ConvertDepthToFloatImage(10000.0);
+    if(depth_float->IsEmpty())
+    {
+        open3d::utility::LogError("Failed to convert to float image\n");
+        return;
+    }
+    LogImageDimension(depth_float, "depth float image");
+
+    // compare depth
     int raw_depth = *depth_ptr->PointerAt<uint16_t>(400, 320, 0);
-    float float_depth = depth_gray_ptr->FloatValueAt(400, 320).second;
-    open3d::utility::LogInfo("raw depth={}, float depth={}\n", raw_depth, float_depth);
+    float single_depth_float = depth_float->FloatValueAt(400, 320).second;
+    open3d::utility::LogInfo("raw depth={}, float depth={}\n", raw_depth, single_depth_float);
 
     // show depth
-    open3d::visualization::DrawGeometries({depth_gray_ptr}, "Depth",
+    open3d::visualization::DrawGeometries({depth_float}, "Depth",
                                           depth_ptr->width_, depth_ptr->height_);
+
+    // write
+    if(write_scaled)
+        open3d::io::WriteImage(dstname, *depth_float->CreateImageFromFloatImage<uint8_t>());
+    else
+        open3d::io::WriteImage(dstname, *depth_ptr);
 
     // convert depth to point cloud
     open3d::camera::PinholeCameraIntrinsic camera;
     camera.SetIntrinsics(640, 480, 575.0, 575.0, 319.5, 239.5);
-    o3PointCloudPtr pointcloud_ptr =
-            o3PointCloud::CreateFromDepthImage(*depth_ptr, camera);
+    o3PointCloudPtr pointcloud_ptr = o3PointCloud::CreateFromDepthImage(*depth_ptr, camera);
 
     // show point cloud
-    open3d::visualization::DrawGeometries({pointcloud_ptr},
-            "geometry::PointCloud from Depth geometry::Image", 1000, 700);
-
-    // write
-    if(write_scaled)
-    {
-        open3d::utility::LogInfo("save scaled depth");
-        if(!depth_gray_ptr->IsEmpty())
-            open3d::io::WriteImage(dstname, *depth_gray_ptr->CreateImageFromFloatImage<uint8_t>());
-        return;
-    }
-    else
-        open3d::io::WriteImage(dstname, *depth_ptr);
-
-    // check the saved image has the same depth
-    o3ImagePtr result_ptr =
-            open3d::io::CreateImageFromFile(dstname);
-    bool same = true;
-    for(int v=0; v<depth_ptr->height_; v++)
-    {
-        for(int u=0; u<depth_ptr->width_; u++)
-        {
-            if(*depth_ptr->PointerAt<uint16_t>(u, v, 0)
-                    != *result_ptr->PointerAt<uint16_t>(u, v, 0))
-            {
-                same = false;
-                open3d::utility::LogInfo("depth at ({}.{}) {} != {}\n", u, v,
-                                         *depth_ptr->PointerAt<uint16_t>(u, v, 0),
-                                         *result_ptr->PointerAt<uint16_t>(u, v, 0));
-            }
-        }
-    }
-    if(same)
-        open3d::utility::LogInfo("the saved image has the same depth\n");
+    open3d::visualization::DrawGeometries({pointcloud_ptr}, "point cloud");
 }
 
 void IoVis_Examples::ReadShowWrite_PointCloud(const char* colorname, const char* depthname,
@@ -115,43 +94,40 @@ void IoVis_Examples::ReadShowWrite_PointCloud(const char* colorname, const char*
     }
 
     // convert to rgbd image
-    double depth_scale = 10000.0, depth_trunc = 3.0;
-    bool convert_rgb_to_intensity = true;
+    double depth_scale = 5000.0, depth_trunc = 3.0;
+    bool convert_rgb_to_intensity = false;
     std::shared_ptr<open3d::geometry::RGBDImage> rgbd_ptr =
             open3d::geometry::RGBDImage::CreateFromColorAndDepth(
-                *color_ptr, *depth_ptr, depth_scale, depth_trunc, convert_rgb_to_intensity);
+                *color_ptr, *depth_ptr, depth_scale, depth_trunc,
+                convert_rgb_to_intensity);
 
     // conver rgbd image to point cloud
     open3d::camera::PinholeCameraIntrinsic intrinsic(
                 open3d::camera::PinholeCameraIntrinsicParameters::PrimeSenseDefault);
-    o3PointCloudPtr pcd_ptr =
-            o3PointCloud::CreateFromRGBDImage(*rgbd_ptr, intrinsic);
+    o3PointCloudPtr ptcd_ptr = o3PointCloud::CreateFromRGBDImage(*rgbd_ptr, intrinsic);
 
     // access to point and color
-    // point cloud is listed in column-first order
-    uint32_t index = 240*color_ptr->height_ + 400;
+    uint32_t index = 240*480 + 400;
     open3d::utility::LogInfo("check point cloud values: point={} | color={}\n",
-                             pcd_ptr->points_[index].transpose(), pcd_ptr->colors_[index].transpose());
+                             ptcd_ptr->points_[index].transpose(),
+                             ptcd_ptr->colors_[index].transpose());
 
     // show point cloud
-    open3d::visualization::DrawGeometries({pcd_ptr}, "point cloud from rgbd");
+    open3d::visualization::DrawGeometries({ptcd_ptr}, "point cloud from rgbd");
 
     // write point cloud in ascii format without compression
     bool write_ascii = true, compressed = false;
-    open3d::io::WritePointCloud(pcdname, *pcd_ptr, write_ascii, compressed);
+    open3d::io::WritePointCloud(pcdname, *ptcd_ptr, write_ascii, compressed);
 
     // read point cloud again
-    o3PointCloudPtr neo_pcd_ptr;
-    neo_pcd_ptr = open3d::io::CreatePointCloudFromFile(pcdname, "pcd", true);
-    open3d::utility::LogInfo("loaded point cloud values: point={} | color={}\n",
-                             neo_pcd_ptr->points_[index].transpose(), neo_pcd_ptr->colors_[index].transpose());
+    o3PointCloudPtr neo_ptcd_ptr;
+    neo_ptcd_ptr = open3d::io::CreatePointCloudFromFile(pcdname, "pcd", true);
 
     // show loaded point cloud
-    open3d::visualization::DrawGeometries({neo_pcd_ptr}, "loaded point cloud");
+    open3d::visualization::DrawGeometries({neo_ptcd_ptr}, "loaded point cloud");
 }
 
-void IoVis_Examples::LogImageDimension(o3ImagePtr img_ptr,
-                                       std::string name)
+void IoVis_Examples::LogImageDimension(o3ImagePtr img_ptr, std::string name)
 {
     open3d::utility::LogInfo("{} size: {:d} x {:d} x {:d} ({:d} bytes per channel)\n",
                              name, img_ptr->width_, img_ptr->height_, img_ptr->num_of_channels_,

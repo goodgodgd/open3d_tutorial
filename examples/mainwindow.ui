@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>382</width>
-    <height>367</height>
+    <width>365</width>
+    <height>232</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -69,8 +69,8 @@
    <widget class="QGroupBox" name="groupBox_2">
     <property name="geometry">
      <rect>
-      <x>20</x>
-      <y>160</y>
+      <x>190</x>
+      <y>10</y>
       <width>151</width>
       <height>131</height>
      </rect>
@@ -118,26 +118,13 @@
      </property>
     </widget>
    </widget>
-   <widget class="QGroupBox" name="groupBox_3">
-    <property name="geometry">
-     <rect>
-      <x>200</x>
-      <y>10</y>
-      <width>151</width>
-      <height>131</height>
-     </rect>
-    </property>
-    <property name="title">
-     <string>TSDF</string>
-    </property>
-   </widget>
   </widget>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>382</width>
+     <width>365</width>
      <height>22</height>
     </rect>
    </property>
